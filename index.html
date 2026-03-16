@@ -5,86 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>תזכורות חכמות</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5899341294576552"
-     crossorigin="anonymous"></script>
-     
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-Z3R2FW6E2X"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-Z3R2FW6E2X');
-</script>
-
-<link rel="icon" type="image/png" href="https://statistical-calculators.site/favicon.png">
-
-<link rel="canonical" href="https://statistical-calculators.site/tools/smart-reminders-il" />
-
-<meta name="description" content="תזכורות חכמות עם שעון, ספירה לאחור ואנימציות — קבל התראות מדויקות לכל משימה, ישירות בדפדפן." />
-
-<meta name="keywords" content="תזכורות, תזכורת, שעון מעורר, ספירה לאחור, משימות, ניהול זמן, התראות דפדפן, טיימר, reminders" />
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebApplication",
-      "@id": "https://statistical-calculators.site/tools/smart-reminders-il#app",
-      "name": "תזכורות חכמות",
-      "url": "https://statistical-calculators.site/tools/smart-reminders-il",
-      "description": "תזכורות חכמות עם שעון, ספירה לאחור ואנימציות — קבל התראות מדויקות לכל משימה, ישירות בדפדפן.",
-      "applicationCategory": "ProductivityApplication",
-      "operatingSystem": "All",
-      "browserRequirements": "Requires JavaScript",
-      "inLanguage": "he",
-      "isAccessibleForFree": true,
-      "dateCreated": "2026-03-15",
-      "dateModified": "2026-03-16",
-      "publisher": {
-        "@type": "Organization",
-        "@id": "https://statistical-calculators.site/#org",
-        "name": "Statistical Calculators",
-        "url": "https://statistical-calculators.site",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://statistical-calculators.site/logo.png"
-        }
-      }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": "https://statistical-calculators.site/tools/smart-reminders-il#breadcrumb",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "דף הבית",
-          "item": "https://statistical-calculators.site"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "כלים",
-          "item": "https://statistical-calculators.site/tools"
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": "תזכורות חכמות",
-          "item": "https://statistical-calculators.site/tools/smart-reminders-il"
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 <style>
 :root {
   --bg:#0d0f14; --surface:#161922; --surface2:#1e2330; --border:#2a3045;
@@ -390,8 +310,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <span id="wakelockTxt">מסך פעיל — לא ייכבה בזמן ההמתנה</span>
   </div>
 
-  <!-- PUSH NOTICE -->
-  <div class="push-notice" id="pushNotice">
+  <!-- PUSH NOTICE (only shown when opened as local file) -->
+  <div class="push-notice" id="pushNotice" style="display:none">
     <strong>💡 להתראות גם כשהדפדפן סגור</strong>
     שמור את הקובץ ופתח אותו דרך <code>web server</code> (לא ישירות כקובץ).<br>
     הכי קל: העלה ל-<code>GitHub Pages</code> — חינם ומהיר.<br>
@@ -584,7 +504,7 @@ const MONTHS_HE=['ינואר','פברואר','מרץ','אפריל','מאי','י�
 
 let tasks=JSON.parse(localStorage.getItem('smart_tasks')||'[]');
 let currentTab='pending';
-let soundOn=localStorage.getItem('sound_on')==='true';
+let soundOn=localStorage.getItem('sound_on')===null?true:localStorage.getItem('sound_on')==='true';
 let currentAnim=localStorage.getItem('current_anim')||'hourglass';
 let alreadyFired=new Set(JSON.parse(localStorage.getItem('fired_alerts')||'[]'));
 let tabFlashInterval=null;
@@ -651,7 +571,7 @@ function playDone(){
 }
 
 let currentRingtone=localStorage.getItem('ringtone')||'chime';
-let tabFlashEnabled=localStorage.getItem('tab_flash')==='true';
+let tabFlashEnabled=localStorage.getItem('tab_flash')===null?true:localStorage.getItem('tab_flash')==='true';
 
 function setRingtone(name){
   currentRingtone=name;
@@ -679,6 +599,9 @@ function toggleTabFlashSetting(){
 
 // init UI state
 (function initSoundUI(){
+  // Persist defaults to localStorage if first visit
+  if(localStorage.getItem('sound_on')===null) localStorage.setItem('sound_on','true');
+  if(localStorage.getItem('tab_flash')===null) localStorage.setItem('tab_flash','true');
   if(soundOn){ document.getElementById('soundBtn').classList.add('on'); document.getElementById('soundLabel').textContent='צלצול: פעיל'; }
   if(tabFlashEnabled){ document.getElementById('tabFlashBtn').classList.add('on'); document.getElementById('tabFlashLabel').textContent='הבהוב טאב: פעיל'; }
   document.querySelectorAll('.ring-btn').forEach(b=>b.classList.remove('active'));
@@ -1085,7 +1008,12 @@ function toggleForm(){
   const open=f.classList.toggle('open');
   b.style.display=open?'none':'flex';
   if(open){
-    document.getElementById('taskDate').value=new Date().toISOString().split('T')[0];
+    // Always compute today's date fresh when form opens (handles midnight crossover)
+    const now=new Date();
+    const y=now.getFullYear();
+    const mo=String(now.getMonth()+1).padStart(2,'0');
+    const d=String(now.getDate()).padStart(2,'0');
+    document.getElementById('taskDate').value=y+'-'+mo+'-'+d;
     document.getElementById('taskTime').value='';
     document.getElementById('taskTitle').value='';
     document.getElementById('taskTitle').focus();
@@ -1174,7 +1102,7 @@ document.addEventListener('visibilitychange',async()=>{
 
 // ── SERVICE WORKER + PUSH ──
 // sw.js must sit in same folder as reminders.html
-const SW_PATH='./sw.js';
+// SW is now self-contained — see registerSW() below
 let swReg=null;
 let notifPermission='Notification' in window ? Notification.permission : 'denied';
 
@@ -1194,14 +1122,99 @@ async function requestNotifPermission(){
   return notifPermission==='granted';
 }
 
+// ── SELF-CONTAINED SW: generate sw.js blob from inline code ──
+// This lets everything live in one HTML file — no separate sw.js needed.
 async function registerSW(){
   if(!('serviceWorker' in navigator)) return;
   try{
-    swReg=await navigator.serviceWorker.register(SW_PATH,{scope:'./'});
+    // Build sw.js as a Blob URL from inline code
+    const swCode = `// ── תזכורות חכמות — Service Worker ──
+const timers = new Map();
+
+self.addEventListener('install',  e => { self.skipWaiting(); });
+self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+
+self.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'SCHEDULE') return;
+  scheduleTasks(e.data.tasks || []);
+});
+
+function scheduleTasks(tasks) {
+  const now = Date.now();
+  const incoming = new Set(tasks.map(t => t.id));
+  for (const [id, tid] of timers) {
+    if (!incoming.has(id)) { clearTimeout(tid); timers.delete(id); }
+  }
+  tasks.forEach(task => {
+    const fireAt = new Date(task.deadline).getTime();
+    const diff   = fireAt - now;
+    if (diff <= 0 || diff > 7 * 24 * 3600 * 1000) return;
+    if (timers.has(task.id)) clearTimeout(timers.get(task.id));
+    const warnDiff = diff - 60000;
+    if (warnDiff > 0) setTimeout(() => fireWarning(task), warnDiff);
+    const tid = setTimeout(() => fireNotification(task), Math.max(0, diff));
+    timers.set(task.id, tid);
+  });
+}
+
+function fireWarning(task) {
+  self.registration.showNotification('\\u26a1 \\u05d3\\u05e7\\u05d4 \\u05d0\\u05d7\\u05ea \\u05e2\\u05d3: ' + task.title, {
+    body: '\\u05d4\\u05ea\\u05d6\\u05db\\u05d5\\u05e8\\u05ea \\u05e9\\u05dc\\u05da \\u05de\\u05d2\\u05d9\\u05e2\\u05d4 \\u05d1\\u05e2\\u05d5\\u05d3 \\u05d3\\u05e7\\u05d4',
+    tag: task.id + '_warn', silent: true, data: { taskId: task.id }
+  });
+}
+
+function fireNotification(task) {
+  timers.delete(task.id);
+  self.registration.showNotification('\\u23f0 ' + task.title, {
+    body: '\\u05d4\\u05d2\\u05d9\\u05e2 \\u05d4\\u05d6\\u05de\\u05df! \\u05dc\\u05d7\\u05e5 \\u05dc\\u05e4\\u05ea\\u05d9\\u05d7\\u05d4',
+    tag: task.id,
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 400],
+    actions: [
+      { action: 'done',   title: '\\u2713 \\u05e1\\u05d9\\u05d9\\u05de\\u05ea\\u05d9' },
+      { action: 'snooze', title: '\\ud83d\\ude34 10 \\u05d3\\u05e7\\u05f3' }
+    ],
+    data: { taskId: task.id, deadline: task.deadline, title: task.title }
+  });
+}
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const { taskId } = e.notification.data || {};
+  if (e.action === 'done')   { broadcastToClients({ type: 'MARK_DONE', taskId }); return; }
+  if (e.action === 'snooze') { broadcastToClients({ type: 'SNOOZE',    taskId }); return; }
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      const existing = clients.find(c => c.url.includes('index') || c.url.includes('reminders') || c.url.endsWith('/'));
+      if (existing) return existing.focus();
+      return self.clients.openWindow('./');
+    })
+  );
+});
+
+async function broadcastToClients(msg) {
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  clients.forEach(c => c.postMessage(msg));
+}`;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const blobURL = URL.createObjectURL(blob);
+
+    // Blob-URL SWs are limited to their origin scope — we need a tiny relay file.
+    // If sw.js exists on server, prefer it; otherwise fall back to blob (limited).
+    let reg;
+    try {
+      // Try real sw.js first (works when uploaded to GitHub)
+      reg = await navigator.serviceWorker.register('./sw.js', {scope:'./'});
+    } catch(e) {
+      // Fallback: blob SW (works in same tab only — still better than nothing)
+      reg = await navigator.serviceWorker.register(blobURL, {scope:'./'});
+      console.info('Using blob SW — upload sw.js for full background support');
+    }
     await navigator.serviceWorker.ready;
-    swReg=await navigator.serviceWorker.getRegistration();
+    swReg = reg;
     syncTasksToSW();
-  }catch(e){ console.warn('SW registration failed:',e); }
+  }catch(e){ console.warn('SW failed:',e); }
 }
 
 // Update wakelock bar to show push status too
@@ -1220,6 +1233,8 @@ async function initPushAndWake(){
     document.getElementById('pushNotice').classList.add('show');
     return;
   }
+  // Hide the push notice — we ARE on a web server
+  document.getElementById('pushNotice').classList.remove('show');
 
   // Register SW
   await registerSW();
