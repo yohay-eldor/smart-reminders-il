@@ -950,7 +950,8 @@ function openResched(id){
   const t=tasks.find(x=>x.id===id); if(!t) return;
   document.getElementById('reschedSub').textContent=t.title;
   const now=new Date();
-  document.getElementById('reschedDate').value=now.toISOString().split('T')[0];
+  const ry=now.getFullYear(), rmo=String(now.getMonth()+1).padStart(2,'0'), rd=String(now.getDate()).padStart(2,'0');
+  document.getElementById('reschedDate').value=`${ry}-${rmo}-${rd}`;
   document.getElementById('reschedTime').value=
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   document.getElementById('reschedOverlay').classList.add('show');
@@ -984,17 +985,25 @@ function confirmResched(){
 let currentAlertTask=null;
 function snoozeCurrentAlert(){
   if(!currentAlertTask) return;
-  const newDeadline=new Date(Date.now()+snoozeMinutes*60000);
-  const t=tasks.find(x=>x.id===currentAlertTask.id);
+  const task=currentAlertTask;  // capture before dismissAlert clears it
+  // Close the overlay immediately
+  dismissAlert();
+  // Then update the task
+  const t=tasks.find(x=>x.id===task.id);
   if(t){
-    t.deadline=newDeadline.toISOString().slice(0,16);
+    const newDeadline=new Date(Date.now()+snoozeMinutes*60000);
+    // Build local datetime string (avoid UTC offset bug)
+    const y=newDeadline.getFullYear();
+    const mo=String(newDeadline.getMonth()+1).padStart(2,'0');
+    const d=String(newDeadline.getDate()).padStart(2,'0');
+    const hh=String(newDeadline.getHours()).padStart(2,'0');
+    const mm=String(newDeadline.getMinutes()).padStart(2,'0');
+    t.deadline=`${y}-${mo}-${d}T${hh}:${mm}`;
     t.done=false;
-    // clear fired keys for re-fire
     [...alreadyFired].filter(k=>k.startsWith(t.id)).forEach(k=>alreadyFired.delete(k));
     localStorage.setItem('fired_alerts',JSON.stringify([...alreadyFired]));
     save(); render();
   }
-  dismissAlert();
   showToast(`😴 נודניק של ${snoozeMinutes} דק׳`);
 }
 
@@ -1019,15 +1028,15 @@ function toggleForm(){
   const open=f.classList.toggle('open');
   b.style.display=open?'none':'flex';
   if(open){
-    // Default = now + 5 minutes (handles midnight rollover automatically)
+    // Default = now + 5 minutes, using LOCAL time (not UTC)
     const def=new Date(Date.now()+5*60000);
     const y=def.getFullYear();
     const mo=String(def.getMonth()+1).padStart(2,'0');
     const d=String(def.getDate()).padStart(2,'0');
-    const hh=String(def.getHours()).padStart(2,'0');
+    const hh=String(def.getHours()).padStart(2,'0');  // getHours() = local time ✓
     const mm=String(def.getMinutes()).padStart(2,'0');
-    document.getElementById('taskDate').value=y+'-'+mo+'-'+d;
-    document.getElementById('taskTime').value=hh+':'+mm;
+    document.getElementById('taskDate').value=`${y}-${mo}-${d}`;
+    document.getElementById('taskTime').value=`${hh}:${mm}`;
     document.getElementById('taskTitle').value='';
     document.getElementById('taskTitle').focus();
   }
@@ -1301,7 +1310,8 @@ if('serviceWorker' in navigator){
     if(e.data.type==='SNOOZE'){
       const t=tasks.find(x=>x.id===e.data.taskId);
       if(t){
-        t.deadline=new Date(Date.now()+snoozeMinutes*60000).toISOString().slice(0,16);
+        const sd=new Date(Date.now()+snoozeMinutes*60000);
+        t.deadline=`${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(sd.getDate()).padStart(2,'0')}T${String(sd.getHours()).padStart(2,'0')}:${String(sd.getMinutes()).padStart(2,'0')}`;
         t.done=false;
         [...alreadyFired].filter(k=>k.startsWith(t.id)).forEach(k=>alreadyFired.delete(k));
         localStorage.setItem('fired_alerts',JSON.stringify([...alreadyFired]));
