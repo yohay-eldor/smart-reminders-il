@@ -191,11 +191,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .btn-ghost{background:var(--surface2);color:var(--text-muted)}
 .btn-ghost:hover{color:var(--text)}
 
-/* TABS */
-.tabs{display:flex;gap:6px;margin-bottom:20px}
-.tab{font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);padding:7px 16px;cursor:pointer;transition:all .15s}
-.tab.active{background:var(--accent);color:#0d0f14;border-color:var(--accent)}
-.tab:hover:not(.active){border-color:var(--text-muted);color:var(--text)}
+/* DONE TOGGLE */
+.done-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}
+.done-toggle-label{font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase}
+.done-toggle-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.done-toggle-btn:hover{border-color:var(--text-muted);color:var(--text)}
+.done-toggle-btn.showing-done{border-color:var(--ok);color:var(--ok);background:rgba(64,192,128,.07)}
 
 /* ALERT MODAL */
 .alert-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
@@ -270,8 +271,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .task-delete{opacity:1;padding:10px}
   .task-deadline{font-size:13px}
   .time-bar-wrap{height:5px;margin-top:10px}
-  .tabs{gap:5px}
-  .tab{font-size:13px;padding:10px 0;flex:1;text-align:center}
+  .done-toggle-btn{font-size:11px;padding:7px 10px}
   .add-form{padding:16px}
   .form-input{font-size:16px;padding:13px 14px}
   .form-row{gap:10px}
@@ -409,11 +409,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
   </div>
 
-  <!-- TABS -->
-  <div class="tabs">
-    <div class="tab active" onclick="setTab('pending')">פעילות</div>
-    <div class="tab" onclick="setTab('done')">הושלמו</div>
-    <div class="tab" onclick="setTab('all')">הכל</div>
+  <!-- TOGGLE: active / done -->
+  <div class="done-toggle-row">
+    <span class="done-toggle-label" id="toggleLabel">משימות פעילות</span>
+    <button class="done-toggle-btn" id="doneToggleBtn" onclick="toggleDoneView()">
+      <span id="doneToggleIcon">✓</span> הצג הושלמו
+    </button>
   </div>
 
   <div class="section-head">
@@ -503,7 +504,8 @@ const DAYS_HE=['ראשון','שני','שלישי','רביעי','חמישי','ש�
 const MONTHS_HE=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
 let tasks=JSON.parse(localStorage.getItem('smart_tasks')||'[]');
-let currentTab='pending';
+// View state: false=active tasks, true=done tasks
+let showingDone=false; // declared here, toggleDoneView defined below
 let soundOn=localStorage.getItem('sound_on')===null?true:localStorage.getItem('sound_on')==='true';
 let currentAnim=localStorage.getItem('current_anim')||'hourglass';
 let alreadyFired=new Set(JSON.parse(localStorage.getItem('fired_alerts')||'[]'));
@@ -865,10 +867,10 @@ function getBarPct(t){
 // ── RENDER TASKS ──
 function render(){
   const list=document.getElementById('tasksList');
-  const f=tasks.filter(t=>currentTab==='pending'?!t.done:currentTab==='done'?t.done:true);
+  const f=tasks.filter(t=>showingDone?t.done:!t.done);
   document.getElementById('taskCount').textContent=f.length;
   if(!f.length){
-    list.innerHTML=`<div class="empty"><div class="icon">✓</div><p>${currentTab==='done'?'עדיין לא הושלמה אף משימה':'אין משימות כרגע'}</p></div>`;
+    list.innerHTML=`<div class="empty"><div class="icon">${showingDone?'✓':'📋'}</div><p>${showingDone?'עדיין לא הושלמה אף משימה':'אין משימות פעילות'}</p></div>`;
     return;
   }
   list.innerHTML=f.map(t=>{
@@ -953,19 +955,28 @@ function openResched(id){
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   document.getElementById('reschedOverlay').classList.add('show');
 }
-function closeResched(){ document.getElementById('reschedOverlay').classList.remove('show'); reschedId=null; }
+function closeResched(){
+  const ov=document.getElementById('reschedOverlay');
+  ov.classList.remove('show');
+  // Force reflow so overlay actually disappears before anything else runs
+  void ov.offsetHeight;
+  reschedId=null;
+}
 function confirmResched(){
-  const t=tasks.find(x=>x.id===reschedId); if(!t) return;
+  const id=reschedId;
+  const t=tasks.find(x=>x.id===id); if(!t) return;
   const date=document.getElementById('reschedDate').value;
   const time=document.getElementById('reschedTime').value;
   if(!date){ showToast('בחר תאריך'); return; }
+  // Close overlay FIRST so UI unfreezes immediately
+  closeResched();
+  // Then update data
   t.deadline=time?`${date}T${time}`:`${date}T00:00`;
   t.done=false;
   t.created=Date.now();
-  // clear fired alerts for this task so it fires again
-  [...alreadyFired].filter(k=>k.startsWith(reschedId)).forEach(k=>alreadyFired.delete(k));
+  [...alreadyFired].filter(k=>k.startsWith(id)).forEach(k=>alreadyFired.delete(k));
   localStorage.setItem('fired_alerts',JSON.stringify([...alreadyFired]));
-  save(); render(); closeResched();
+  save(); render();
   showToast('🔄 משימה הופעלה מחדש!');
 }
 
@@ -1008,20 +1019,34 @@ function toggleForm(){
   const open=f.classList.toggle('open');
   b.style.display=open?'none':'flex';
   if(open){
-    // Always compute today's date fresh when form opens (handles midnight crossover)
-    const now=new Date();
-    const y=now.getFullYear();
-    const mo=String(now.getMonth()+1).padStart(2,'0');
-    const d=String(now.getDate()).padStart(2,'0');
+    // Default = now + 5 minutes (handles midnight rollover automatically)
+    const def=new Date(Date.now()+5*60000);
+    const y=def.getFullYear();
+    const mo=String(def.getMonth()+1).padStart(2,'0');
+    const d=String(def.getDate()).padStart(2,'0');
+    const hh=String(def.getHours()).padStart(2,'0');
+    const mm=String(def.getMinutes()).padStart(2,'0');
     document.getElementById('taskDate').value=y+'-'+mo+'-'+d;
-    document.getElementById('taskTime').value='';
+    document.getElementById('taskTime').value=hh+':'+mm;
     document.getElementById('taskTitle').value='';
     document.getElementById('taskTitle').focus();
   }
 }
-function setTab(t){
-  currentTab=t;
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['pending','done','all'][i]===t));
+function toggleDoneView(){
+  showingDone=!showingDone;
+  const btn=document.getElementById('doneToggleBtn');
+  const lbl=document.getElementById('toggleLabel');
+  if(showingDone){
+    btn.classList.add('showing-done');
+    document.getElementById('doneToggleIcon').textContent='←';
+    btn.childNodes[1].textContent=' חזור לפעילות';
+    lbl.textContent='משימות שהושלמו';
+  } else {
+    btn.classList.remove('showing-done');
+    document.getElementById('doneToggleIcon').textContent='✓';
+    btn.childNodes[1].textContent=' הצג הושלמו';
+    lbl.textContent='משימות פעילות';
+  }
   render();
 }
 function save(){localStorage.setItem('smart_tasks',JSON.stringify(tasks));}
