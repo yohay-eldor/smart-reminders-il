@@ -19,35 +19,40 @@
     "productivity",
     "utilities"
   ],
-  "iarc_rating_id": "",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-96.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-180.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-192.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -55,14 +60,14 @@
   ],
   "screenshots": [
     {
-      "src": "screenshot.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/screenshot.png",
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "תזכורות חכמות — מסך ראשי"
     },
     {
-      "src": "screenshot-wide.png",
+      "src": "https://yohay-eldor.github.io/smart-reminders-il/screenshot-wide.png",
       "sizes": "1280x800",
       "type": "image/png",
       "form_factor": "wide",
@@ -73,11 +78,10 @@
     {
       "name": "הוסף משימה",
       "short_name": "הוסף",
-      "description": "הוסף משימה חדשה במהירות",
       "url": "./index.html",
       "icons": [
         {
-          "src": "icon-96.png",
+          "src": "https://yohay-eldor.github.io/smart-reminders-il/icon-96.png",
           "sizes": "96x96",
           "type": "image/png"
         }
